@@ -1,9 +1,23 @@
-import { useState } from 'react'
-import { MessageCircle, Star, UserRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { MessageCircle, ShieldCheck, Star, UserRound, Upload } from 'lucide-react'
+import { supabase, ADMIN_EMAIL } from '../supabase.js'
 
 export default function Participation() {
   const [pseudo, setPseudo] = useState(() => localStorage.getItem('mimou_pseudo') || '')
   const [saved, setSaved] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const checkAdmin = async () => {
+      if (!supabase) return
+      const { data } = await supabase.auth.getUser()
+      if (active) setIsAdmin(data?.user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase())
+    }
+    checkAdmin()
+    return () => { active = false }
+  }, [])
 
   const savePseudo = (event) => {
     event.preventDefault()
@@ -31,6 +45,7 @@ export default function Participation() {
           <span><MessageCircle size={17} /> Commenter</span>
           <span><Star size={17} /> Noter de 1 à 5</span>
         </div>
+        {isAdmin && <div style={{marginTop:24,padding:16,border:'1px solid rgba(124,58,237,.3)',borderRadius:16,background:'rgba(124,58,237,.08)'}}><div style={{display:'flex',alignItems:'center',gap:8,color:'#c4b5fd',fontWeight:800,fontSize:13}}><ShieldCheck size={17}/> MODE ADMINISTRATEUR</div><p style={{margin:'8px 0 13px',color:'#94a3b8',fontSize:13}}>Ton compte administrateur peut publier directement des livres et des mangas.</p><Link className="button primary" to="/publier"><Upload size={17}/> Publier une œuvre</Link></div>}
       </section>
     </main>
   )
