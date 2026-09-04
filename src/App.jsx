@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import { BookOpen, Bot, BookMarked, Library, Search, Sparkles } from 'lucide-react'
 import Livres from './pages/Livres.jsx'
+import Manga from './pages/Manga.jsx'
 
 const features = [
   { to: '/livres', icon: BookOpen, title: 'Livres', text: 'Romans, éducation, développement personnel et auteurs africains.' },
@@ -46,7 +47,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/livres" element={<Livres />} />
-      <Route path="/manga" element={<Placeholder title="Manga" text="Un espace manga visuel et dynamique, séparé de l’expérience livres." />} />
+      <Route path="/manga" element={<Manga />} />
       <Route path="/dictionnaire" element={<Placeholder title="Dictionnaire" text="Recherche de mots, définitions, synonymes et explications simples." />} />
       <Route path="/mia" element={<Placeholder title="MIA" text="L’assistant intelligent sera intégré dans tout MIMOUVERSE." />} />
       <Route path="/connexion" element={<Placeholder title="Connexion" text="L’authentification des lecteurs sera ajoutée après la base visuelle." />} />
