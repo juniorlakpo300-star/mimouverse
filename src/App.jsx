@@ -6,6 +6,7 @@ import Dictionnaire from './pages/Dictionnaire.jsx'
 import Mia from './pages/Mia.jsx'
 import Participation from './pages/Participation.jsx'
 import Admin from './pages/Admin.jsx'
+import AdminGuard from './auth/AdminGuard.jsx'
 
 const features = [
   { to: '/livres', icon: BookOpen, title: 'Livres', text: 'Romans, éducation, développement personnel et auteurs africains.' },
@@ -55,6 +56,7 @@ export default function App() {
       <Route path="/mia" element={<Mia />} />
       <Route path="/participer" element={<Participation />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/secure" element={<AdminGuard><Admin /></AdminGuard>} />
     </Routes>
     <footer>© 2026 MIMOUVERSE · Un univers imaginé pour les lecteurs.</footer>
   </div>
