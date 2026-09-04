@@ -5,6 +5,7 @@ import App from './App.jsx'
 import './styles.css'
 import './pages/Dictionnaire.css'
 import './mia.css'
+import './participation-admin.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
