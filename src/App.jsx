@@ -1,9 +1,11 @@
 import { Link, Route, Routes } from 'react-router-dom'
-import { BookOpen, Bot, BookMarked, Library, Search, Sparkles } from 'lucide-react'
+import { BookOpen, Bot, BookMarked, Library, Search, Sparkles, UserRound, ShieldCheck } from 'lucide-react'
 import Livres from './pages/Livres.jsx'
 import Manga from './pages/Manga.jsx'
 import Dictionnaire from './pages/Dictionnaire.jsx'
 import Mia from './pages/Mia.jsx'
+import Participation from './pages/Participation.jsx'
+import Admin from './pages/Admin.jsx'
 
 const features = [
   { to: '/livres', icon: BookOpen, title: 'Livres', text: 'Romans, éducation, développement personnel et auteurs africains.' },
@@ -35,16 +37,15 @@ function Home() {
   )
 }
 
-function Placeholder({ title, text }) {
-  return <main className="placeholder"><span className="kicker">MIMOUVERSE</span><h1>{title}</h1><p>{text}</p><Link className="button primary" to="/">Retour à l’accueil</Link></main>
-}
-
 export default function App() {
   return <div className="app">
     <header className="navbar">
       <Link className="brand" to="/"><span className="brand-mark">M</span><span>MIMOU<span>VERSE</span></span></Link>
       <nav><Link to="/livres">Livres</Link><Link to="/manga">Manga</Link><Link to="/dictionnaire">Dictionnaire</Link><Link to="/mia">MIA</Link></nav>
-      <Link className="login" to="/connexion">Connexion</Link>
+      <div className="navbar-actions">
+        <Link className="participate-link" to="/participer"><UserRound size={16} /> Participer</Link>
+        <Link className="admin-link" to="/admin"><ShieldCheck size={15} /> Admin</Link>
+      </div>
     </header>
     <Routes>
       <Route path="/" element={<Home />} />
@@ -52,7 +53,8 @@ export default function App() {
       <Route path="/manga" element={<Manga />} />
       <Route path="/dictionnaire" element={<Dictionnaire />} />
       <Route path="/mia" element={<Mia />} />
-      <Route path="/connexion" element={<Placeholder title="Connexion" text="L’authentification des lecteurs sera ajoutée après la base visuelle." />} />
+      <Route path="/participer" element={<Participation />} />
+      <Route path="/admin" element={<Admin />} />
     </Routes>
     <footer>© 2026 MIMOUVERSE · Un univers imaginé pour les lecteurs.</footer>
   </div>
