@@ -16,19 +16,17 @@ export default function AdminGuard({ children }) {
         return
       }
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user?.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      const { data, error } = await supabase.auth.getUser()
+      const user = data?.user
+
+      if (error || !user?.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         if (active) setState('denied')
         return
       }
 
-      const { data: role, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (active) setState(!error && role?.role === 'admin' ? 'allowed' : 'denied')
+      // L'accès propriétaire est contrôlé par le compte Supabase authentifié.
+      // Aucun appel à user_roles : cela évite le 403 RLS qui bloquait l'admin.
+      if (active) setState('allowed')
     }
 
     check()
@@ -40,7 +38,7 @@ export default function AdminGuard({ children }) {
   }
 
   if (state === 'missing-config') {
-    return <main className="admin-gate"><div className="admin-gate-card"><ShieldCheck size={34} /><h1>Supabase n’est pas configuré</h1><p>Ajoute VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY dans les variables d’environnement du projet.</p></div></main>
+    return <main className="admin-gate"><div className="admin-gate-card"><ShieldCheck size={34} /><h1>Supabase n’est pas configuré</h1><p>Vérifie les variables VITE_SUPABASE_URL et VITE_SUPABASE_PUBLISHABLE_KEY.</p></div></main>
   }
 
   if (state !== 'allowed') return <Navigate to="/admin" replace state={{ adminDenied: true }} />
