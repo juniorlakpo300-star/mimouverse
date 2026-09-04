@@ -3,6 +3,7 @@ import { BookOpen, Bot, BookMarked, Library, Search, Sparkles } from 'lucide-rea
 import Livres from './pages/Livres.jsx'
 import Manga from './pages/Manga.jsx'
 import Dictionnaire from './pages/Dictionnaire.jsx'
+import Mia from './pages/Mia.jsx'
 
 const features = [
   { to: '/livres', icon: BookOpen, title: 'Livres', text: 'Romans, éducation, développement personnel et auteurs africains.' },
@@ -50,7 +51,7 @@ export default function App() {
       <Route path="/livres" element={<Livres />} />
       <Route path="/manga" element={<Manga />} />
       <Route path="/dictionnaire" element={<Dictionnaire />} />
-      <Route path="/mia" element={<Placeholder title="MIA" text="L’assistant intelligent sera intégré dans tout MIMOUVERSE." />} />
+      <Route path="/mia" element={<Mia />} />
       <Route path="/connexion" element={<Placeholder title="Connexion" text="L’authentification des lecteurs sera ajoutée après la base visuelle." />} />
     </Routes>
     <footer>© 2026 MIMOUVERSE · Un univers imaginé pour les lecteurs.</footer>
