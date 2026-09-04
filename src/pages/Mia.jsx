@@ -2,29 +2,48 @@ import { useState } from 'react'
 import { Bot, BookOpen, Send, Sparkles, WandSparkles } from 'lucide-react'
 
 const suggestions = [
-  'Explique-moi simplement un mot',
   'Recommande-moi un livre',
-  'Résume cette histoire',
+  'Quels livres sont disponibles ?',
+  'Quels mangas sont disponibles ?',
   'Comment fonctionne MIMOUVERSE ?',
 ]
 
 const starterMessages = [
-  { role: 'assistant', text: 'Bonjour 👋 Je suis MIA, l’assistante de MIMOUVERSE. Je peux t’aider à comprendre, chercher et découvrir.' },
+  { role: 'assistant', text: 'Bonjour 👋 Je suis MIA, l’assistante de MIMOUVERSE. Je peux chercher dans le catalogue, te recommander des œuvres et t’aider à découvrir le site.' },
 ]
 
 export default function Mia() {
   const [messages, setMessages] = useState(starterMessages)
   const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const sendMessage = (text = input) => {
+  const sendMessage = async (text = input) => {
     const value = text.trim()
-    if (!value) return
-    setMessages((current) => [
-      ...current,
-      { role: 'user', text: value },
-      { role: 'assistant', text: 'Je suis prête à t’aider. La connexion au moteur IA sera ajoutée côté serveur pour garder les clés et les données sensibles protégées.' },
-    ])
+    if (!value || loading) return
+
+    const nextMessages = [...messages, { role: 'user', text: value }]
+    setMessages(nextMessages)
     setInput('')
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: nextMessages.map((message) => ({ role: message.role, content: message.text })),
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || 'MIA est momentanément indisponible.')
+
+      setMessages((current) => [...current, { role: 'assistant', text: data.reply || 'Je n’ai pas réussi à formuler une réponse.' }])
+    } catch (error) {
+      setMessages((current) => [...current, { role: 'assistant', text: `Désolée 😕 ${error.message || 'Une erreur est survenue.'}` }])
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -45,7 +64,7 @@ export default function Mia() {
         <div className="mia-chat-header">
           <div className="mia-avatar"><Bot size={22} /></div>
           <div><strong>MIA</strong><span>Assistante MIMOUVERSE</span></div>
-          <span className="mia-online"><i /> Prête</span>
+          <span className="mia-online"><i /> {loading ? 'Réfléchit…' : 'En ligne'}</span>
         </div>
 
         <div className="mia-messages">
@@ -55,15 +74,23 @@ export default function Mia() {
               <div className="mia-bubble">{message.text}</div>
             </div>
           ))}
+          {loading && (
+            <div className="mia-message assistant">
+              <div className="mia-mini-avatar"><Bot size={16} /></div>
+              <div className="mia-bubble">MIA prépare sa réponse…</div>
+            </div>
+          )}
         </div>
 
         <div className="mia-suggestions">
-          {suggestions.map((suggestion) => <button key={suggestion} onClick={() => sendMessage(suggestion)}>{suggestion}</button>)}
+          {suggestions.map((suggestion) => (
+            <button key={suggestion} onClick={() => sendMessage(suggestion)} disabled={loading}>{suggestion}</button>
+          ))}
         </div>
 
         <form className="mia-input-row" onSubmit={(event) => { event.preventDefault(); sendMessage() }}>
-          <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Écris ta question à MIA..." aria-label="Message à MIA" />
-          <button type="submit" aria-label="Envoyer"><Send size={18} /></button>
+          <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Écris ta question à MIA..." aria-label="Message à MIA" disabled={loading} />
+          <button type="submit" aria-label="Envoyer" disabled={loading || !input.trim()}><Send size={18} /></button>
         </form>
         <small className="mia-disclaimer">MIA peut faire des erreurs. Vérifie les informations importantes.</small>
       </section>
