@@ -5,6 +5,7 @@ import Manga from './pages/Manga.jsx'
 import Dictionnaire from './pages/Dictionnaire.jsx'
 import Mia from './pages/Mia.jsx'
 import Participation from './pages/Participation.jsx'
+import Publication from './pages/Publication.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminGuard from './auth/AdminGuard.jsx'
 import AdminLogin from './pages/AdminLogin.jsx'
@@ -71,6 +72,7 @@ export default function App() {
       <Route path="/dictionnaire" element={<Dictionnaire />} />
       <Route path="/mia" element={<Mia />} />
       <Route path="/participer" element={<Participation />} />
+      <Route path="/publier" element={<Publication />} />
       <Route path="/admin" element={<AdminLogin />} />
       <Route path="/admin/secure" element={<AdminGuard><Admin /></AdminGuard>} />
     </Routes>
