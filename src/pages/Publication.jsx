@@ -5,6 +5,11 @@ import { supabase, ADMIN_EMAIL } from '../supabase.js'
 
 const EMPTY_FORM = { title: '', author: '', category: '', description: '', type: 'books' }
 
+const STORAGE = {
+  books: { files: 'book-pdfs', covers: 'book-covers' },
+  manga: { files: 'manga-pages', covers: 'manga-covers' },
+}
+
 function safeName(name) {
   return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, '')
 }
@@ -33,22 +38,26 @@ export default function Publication() {
       if (!user) throw new Error('Tu dois être connecté en administrateur.')
       if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) throw new Error('Ce compte n’a pas les droits administrateur.')
 
-      const bucket = form.type === 'manga' ? 'manga' : 'books'
+      const storage = STORAGE[form.type]
       const base = `${Date.now()}-${safeName(file.name)}`
       const filePath = `works/${base}`
       const coverPath = cover ? `covers/${Date.now()}-${safeName(cover.name)}` : null
 
-      const uploadFile = await supabase.storage.from(bucket).upload(filePath, file, { upsert: false, contentType: file.type || 'application/pdf' })
+      const uploadFile = await supabase.storage
+        .from(storage.files)
+        .upload(filePath, file, { upsert: false, contentType: file.type || 'application/pdf' })
       if (uploadFile.error) throw new Error(`Upload du fichier impossible : ${uploadFile.error.message}`)
 
       let coverUrl = ''
       if (cover) {
-        const uploadCover = await supabase.storage.from(bucket).upload(coverPath, cover, { upsert: false, contentType: cover.type })
+        const uploadCover = await supabase.storage
+          .from(storage.covers)
+          .upload(coverPath, cover, { upsert: false, contentType: cover.type })
         if (uploadCover.error) throw new Error(`Upload de la couverture impossible : ${uploadCover.error.message}`)
-        coverUrl = supabase.storage.from(bucket).getPublicUrl(coverPath).data?.publicUrl || ''
+        coverUrl = supabase.storage.from(storage.covers).getPublicUrl(coverPath).data?.publicUrl || ''
       }
 
-      const fileUrl = supabase.storage.from(bucket).getPublicUrl(filePath).data?.publicUrl || ''
+      const fileUrl = supabase.storage.from(storage.files).getPublicUrl(filePath).data?.publicUrl || ''
       const payload = {
         title: form.title.trim(),
         author: form.author.trim(),
@@ -97,7 +106,7 @@ export default function Publication() {
             <div className="publication-field full"><label>Fichier de l’œuvre *</label><div className="upload-box">{file ? <div className="selected-file"><FileUp size={20}/><span>{file.name}</span><button type="button" onClick={() => setFile(null)}>×</button></div> : <><div><FileUp size={22}/><strong>Choisir le fichier PDF</strong><span>Le fichier sera envoyé dans le stockage Supabase.</span></div><input type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} /></>}</div></div>
           </div>
           <button className="publication-submit" disabled={loading}>{loading ? <><Loader2 size={18} /> Publication en cours...</> : <><Upload size={18} /> Publier {form.type === 'manga' ? 'le manga' : 'le livre'}</>}</button>
-          <div className="publication-help">Les fichiers utilisent les buckets Supabase « books » et « manga ». Si Supabase affiche une erreur de bucket, il faudra créer/autoriser ces deux espaces de stockage dans Storage.</div>
+          <div className="publication-help">Livres : PDF dans « book-pdfs » et couvertures dans « book-covers ». Mangas : fichiers dans « manga-pages » et couvertures dans « manga-covers ».</div>
         </form>
       </div>
     </main>
