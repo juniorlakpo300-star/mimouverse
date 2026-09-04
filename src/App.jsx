@@ -1,5 +1,5 @@
 import { Link, Route, Routes } from 'react-router-dom'
-import { BookOpen, Bot, BookMarked, Library, Search, Sparkles, UserRound, ShieldCheck } from 'lucide-react'
+import { BookOpen, Bot, BookMarked, Library, Search, Sparkles, UserRound, ShieldCheck, Share2 } from 'lucide-react'
 import Livres from './pages/Livres.jsx'
 import Manga from './pages/Manga.jsx'
 import Dictionnaire from './pages/Dictionnaire.jsx'
@@ -40,11 +40,26 @@ function Home() {
 }
 
 export default function App() {
+  const shareSite = async () => {
+    const url = window.location.origin
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'MIMOUVERSE', text: 'Découvre MIMOUVERSE : livres, mangas et outils de lecture.', url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        window.alert('Lien MIMOUVERSE copié dans le presse-papiers.')
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') window.alert('Impossible de partager le lien pour le moment.')
+    }
+  }
+
   return <div className="app">
     <header className="navbar">
       <Link className="brand" to="/"><span className="brand-mark">M</span><span>MIMOU<span>VERSE</span></span></Link>
       <nav><Link to="/livres">Livres</Link><Link to="/manga">Manga</Link><Link to="/dictionnaire">Dictionnaire</Link><Link to="/mia">MIA</Link></nav>
       <div className="navbar-actions">
+        <button className="participate-link" type="button" onClick={shareSite}><Share2 size={16} /> Partager</button>
         <Link className="participate-link" to="/participer"><UserRound size={16} /> Participer</Link>
         <Link className="admin-link" to="/admin"><ShieldCheck size={15} /> Admin</Link>
       </div>
