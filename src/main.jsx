@@ -17,6 +17,7 @@ import './admin-gate.css'
 import './visual-overhaul.css'
 import './book-reader.css'
 import './admin-login-visual.css'
+import './feedback.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
