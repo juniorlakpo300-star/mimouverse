@@ -46,7 +46,7 @@ export default function Feedback({ type, items = [] }) {
     setError('')
 
     const [commentsResult, ratingsResult] = await Promise.all([
-      supabase.from('comments').select('id, content, created_at, approved, user_id').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
+      supabase.from('comments').select('id, content, created_at, approved, user_id, pseudo').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
       supabase.from('ratings').select('id, rating, created_at, user_id').eq(idField, selectedId).order('created_at', { ascending: false }),
     ])
 
@@ -113,6 +113,7 @@ export default function Feedback({ type, items = [] }) {
         const { error: commentError } = await supabase.from('comments').insert({
           [idField]: selectedId,
           user_id: user.id,
+          pseudo: displayPseudo,
           content: comment.trim(),
           approved: true,
         })
@@ -189,7 +190,7 @@ export default function Feedback({ type, items = [] }) {
             </div>
 
             <div className="feedback-comments">
-              {loading ? <div className="feedback-loading"><Loader2 size={24} className="feedback-spin" /> Chargement des avis...</div> : comments.length === 0 ? <div className="feedback-loading"><MessageCircle size={24} /><span>Sois le premier à laisser un commentaire.</span></div> : comments.map((item) => <article className="feedback-comment" key={item.id}><div className="comment-avatar"><UserRound size={17} /></div><div><div className="comment-top"><strong>{item.user_id === user?.id ? displayPseudo : 'Lecteur MIMOUVERSE'}</strong><span>{item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : ''}</span></div><p>{item.content}</p></div></article>)}
+              {loading ? <div className="feedback-loading"><Loader2 size={24} className="feedback-spin" /> Chargement des avis...</div> : comments.length === 0 ? <div className="feedback-loading"><MessageCircle size={24} /><span>Sois le premier à laisser un commentaire.</span></div> : comments.map((item) => <article className="feedback-comment" key={item.id}><div className="comment-avatar"><UserRound size={17} /></div><div><div className="comment-top"><strong>{item.pseudo || 'Lecteur MIMOUVERSE'}</strong><span>{item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : ''}</span></div><p>{item.content}</p></div></article>)}
             </div>
           </div>
         </div>
