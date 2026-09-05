@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import { BookOpen, Bot, BookMarked, Library, Search, Sparkles, UserRound, ShieldCheck, Share2, ArrowRight } from 'lucide-react'
 import Livres from './pages/Livres.jsx'
+import Livre from './pages/Livre.jsx'
 import Manga from './pages/Manga.jsx'
 import Dictionnaire from './pages/Dictionnaire.jsx'
 import Mia from './pages/Mia.jsx'
@@ -66,6 +67,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/livres" element={<Livres />} />
+      <Route path="/livres/:id" element={<Livre />} />
       <Route path="/manga" element={<Manga />} />
       <Route path="/dictionnaire" element={<Dictionnaire />} />
       <Route path="/mia" element={<Mia />} />
