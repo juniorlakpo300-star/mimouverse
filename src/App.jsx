@@ -10,6 +10,8 @@ import Admin from './pages/Admin.jsx'
 import AdminGuard from './auth/AdminGuard.jsx'
 import AdminLogin from './pages/AdminLogin.jsx'
 
+const SITE_URL = 'https://mimouverse.vercel.app/'
+
 const features = [
   { to: '/livres', icon: BookOpen, title: 'Livres', text: 'Romans, éducation, développement personnel et auteurs africains.' },
   { to: '/manga', icon: BookMarked, title: 'Manga', text: 'Séries, chapitres, nouveautés et tendances.' },
@@ -42,12 +44,11 @@ function Home() {
 
 export default function App() {
   const shareSite = async () => {
-    const url = window.location.origin
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'MIMOUVERSE', text: 'Découvre MIMOUVERSE : livres, mangas et outils de lecture.', url })
+        await navigator.share({ title: 'MIMOUVERSE', text: 'Découvre MIMOUVERSE : livres, mangas et outils de lecture.', url: SITE_URL })
       } else {
-        await navigator.clipboard.writeText(url)
+        await navigator.clipboard.writeText(SITE_URL)
         window.alert('Lien MIMOUVERSE copié dans le presse-papiers.')
       }
     } catch (error) {
