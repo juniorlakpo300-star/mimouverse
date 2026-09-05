@@ -1,16 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BookOpen, Search, Sparkles, Volume2, ArrowRight, RotateCcw } from 'lucide-react'
 import './Dictionnaire.css'
-
-const dictionary = [
-  { word: 'Résilience', type: 'Nom féminin', definition: 'Capacité à continuer d’avancer et à retrouver un équilibre après une difficulté.', simple: 'C’est la force de se relever après un moment difficile.', synonyms: ['force', 'adaptation', 'persévérance'], antonyms: ['fragilité', 'abandon'], example: 'Sa résilience lui permet de transformer les difficultés en nouvelles occasions d’apprendre.', level: 'Intermédiaire' },
-  { word: 'Persévérance', type: 'Nom féminin', definition: 'Action de poursuivre un objectif avec constance malgré les obstacles.', simple: 'C’est continuer même quand c’est difficile.', synonyms: ['constance', 'détermination', 'ténacité'], antonyms: ['abandon', 'renoncement'], example: 'Avec de la persévérance, elle a terminé son projet.', level: 'Facile' },
-  { word: 'Empathie', type: 'Nom féminin', definition: 'Faculté de comprendre les émotions et le point de vue d’une autre personne.', simple: 'C’est essayer de comprendre ce que quelqu’un ressent.', synonyms: ['compréhension', 'écoute', 'sensibilité'], antonyms: ['indifférence'], example: 'L’empathie facilite le dialogue et le respect des autres.', level: 'Facile' },
-  { word: 'Éloquence', type: 'Nom féminin', definition: 'Art de s’exprimer avec clarté, force et aisance afin de convaincre ou de toucher un public.', simple: 'C’est savoir bien parler pour faire passer une idée.', synonyms: ['expression', 'art oratoire'], antonyms: ['confusion'], example: 'Son éloquence a captivé toute la salle.', level: 'Avancé' },
-  { word: 'Curiosité', type: 'Nom féminin', definition: 'Désir de connaître, de comprendre ou de découvrir quelque chose.', simple: 'C’est avoir envie d’apprendre et de découvrir.', synonyms: ['intérêt', 'soif de savoir'], antonyms: ['indifférence'], example: 'Sa curiosité l’a poussée à ouvrir le dictionnaire.', level: 'Facile' },
-]
-
-const normalize = (value) => value.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')
+import { dictionary, normalize } from '../data/dictionaryData.js'
 
 export default function Dictionnaire() {
   const [query, setQuery] = useState('')
@@ -47,7 +38,7 @@ export default function Dictionnaire() {
           <div className="definition-block"><span>Définition</span><p>{selected.definition}</p></div>
           <button className="simple-button" onClick={() => setSimple((value) => !value)}><Sparkles size={17} /> {simple ? 'Masquer l’explication simple' : '✨ Expliquer simplement'}</button>
           {simple && <div className="simple-answer"><strong>En clair</strong><p>{selected.simple}</p></div>}
-          <div className="dictionary-columns"><div><span>Synonymes</span><div className="word-pills">{selected.synonyms.map((word) => <em key={word}>{word}</em>)}</div></div><div><span>Antonymes</span><div className="word-pills muted">{selected.antonyms.map((word) => <em key={word}>{word}</em>)}</div></div></div>
+          <div className="dictionary-columns"><div><span>Synonymes</span><div className="word-pills">{selected.synonyms.length ? selected.synonyms.map((word) => <em key={word}>{word}</em>) : <em>—</em>}</div></div><div><span>Antonymes</span><div className="word-pills muted">{selected.antonyms.length ? selected.antonyms.map((word) => <em key={word}>{word}</em>) : <em>—</em>}</div></div></div>
           <div className="example-block"><span>Exemple</span><p>« {selected.example} »</p></div>
           <button className="dictionary-mia"><Sparkles size={17} /> Demander à MIA <ArrowRight size={16} /></button>
         </article>
