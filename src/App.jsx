@@ -7,6 +7,7 @@ import Mia from './pages/Mia.jsx'
 import Participation from './pages/Participation.jsx'
 import Publication from './pages/Publication.jsx'
 import Admin from './pages/Admin.jsx'
+import AdminComments from './components/AdminComments.jsx'
 import AdminGuard from './auth/AdminGuard.jsx'
 import AdminLogin from './pages/AdminLogin.jsx'
 
@@ -71,7 +72,7 @@ export default function App() {
       <Route path="/participer" element={<Participation />} />
       <Route path="/publier" element={<Publication />} />
       <Route path="/admin" element={<AdminLogin />} />
-      <Route path="/admin/secure" element={<AdminGuard><Admin /></AdminGuard>} />
+      <Route path="/admin/secure" element={<AdminGuard><Admin /><AdminComments /></AdminGuard>} />
     </Routes>
     <Link className="lia-float" to="/mia" aria-label="Ouvrir Lia"><span className="lia-avatar"><Bot size={18}/></span><span className="lia-label">Lia · Besoin d’aide ?</span></Link>
     <footer>© 2026 MIMOUVERSE · Lis. Découvre. Comprends. Imagine.</footer>
