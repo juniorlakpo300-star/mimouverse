@@ -9,7 +9,10 @@ import './admin-redesign.css'
 import './site-polish.css'
 import './pages/Dictionnaire.css'
 import './mia.css'
+import './mia-redesign.css'
 import './participation-admin.css'
+import './participation-redesign.css'
+import './publication-redesign.css'
 import './admin-gate.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
