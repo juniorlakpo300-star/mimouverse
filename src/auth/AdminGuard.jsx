@@ -10,6 +10,15 @@ export default function AdminGuard({ children }) {
   useEffect(() => {
     let active = true
 
+    const applyUser = (user) => {
+      if (!active) return
+      if (!user?.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        setState('denied')
+        return
+      }
+      setState('allowed')
+    }
+
     const check = async () => {
       if (!supabase) {
         if (active) setState('missing-config')
@@ -17,20 +26,26 @@ export default function AdminGuard({ children }) {
       }
 
       const { data, error } = await supabase.auth.getUser()
-      const user = data?.user
-
-      if (error || !user?.email || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      if (error) {
         if (active) setState('denied')
         return
       }
 
-      // L'accès propriétaire est contrôlé par le compte Supabase authentifié.
-      // Aucun appel à user_roles : cela évite le 403 RLS qui bloquait l'admin.
-      if (active) setState('allowed')
+      applyUser(data?.user)
     }
 
     check()
-    return () => { active = false }
+
+    if (!supabase) return () => { active = false }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      applyUser(session?.user)
+    })
+
+    return () => {
+      active = false
+      authListener?.subscription?.unsubscribe()
+    }
   }, [location.pathname])
 
   if (state === 'checking') {
