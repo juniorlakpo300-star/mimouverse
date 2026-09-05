@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { MessageCircle, Send, Star, Loader2, UserRound, ShieldCheck } from 'lucide-react'
+import { MessageCircle, Send, Star, Loader2, UserRound, ShieldCheck, Clock3 } from 'lucide-react'
 import { supabase } from '../supabase.js'
 import ReaderAuth from './ReaderAuth.jsx'
 
@@ -81,17 +81,14 @@ export default function Feedback({ type, items = [] }) {
       setError('Supabase n’est pas configuré.')
       return
     }
-
     if (!user) {
-      setError('Connecte-toi avec ton pseudo avant de publier un avis.')
+      setError('Choisis d’abord un pseudo pour participer.')
       return
     }
-
     if (!selectedId) {
       setError(`Publie d’abord au moins un ${label}.`)
       return
     }
-
     if (!rating && !comment.trim()) {
       setError('Ajoute une note ou un commentaire avant d’envoyer.')
       return
@@ -115,14 +112,14 @@ export default function Feedback({ type, items = [] }) {
           user_id: user.id,
           pseudo: displayPseudo,
           content: comment.trim(),
-          approved: true,
+          approved: false,
         })
         if (commentError) throw commentError
       }
 
       setRating(0)
       setComment('')
-      setMessage(`Merci ${displayPseudo} ! Ton avis a bien été enregistré.`)
+      setMessage(comment.trim() ? `Merci ${displayPseudo} ! Ton commentaire est envoyé à l’administrateur pour validation.` : `Merci ${displayPseudo} ! Ta note a bien été enregistrée.`)
       await loadFeedback()
     } catch (submitError) {
       setError(submitError?.message || 'Impossible d’enregistrer ton avis pour le moment.')
@@ -137,7 +134,7 @@ export default function Feedback({ type, items = [] }) {
         <div>
           <span className="kicker">Communauté MIMOUVERSE</span>
           <h2>Commentaires & notation</h2>
-          <p>Choisis une œuvre, connecte-toi avec ton pseudo et partage ton avis avec les autres lecteurs.</p>
+          <p>Choisis une œuvre, crée ton pseudo et partage ton avis. Les commentaires sont vérifiés avant publication.</p>
         </div>
         <div className="feedback-icon"><MessageCircle size={24} /></div>
       </div>
@@ -151,8 +148,8 @@ export default function Feedback({ type, items = [] }) {
       ) : (
         <div className="feedback-layout">
           <div className="feedback-form-card">
-            <div className="feedback-auth-title"><ShieldCheck size={18} /><strong>Identifie-toi avant de commenter</strong></div>
-            <ReaderAuth />
+            <div className="feedback-auth-title"><ShieldCheck size={18} /><strong>Choisis ton pseudo avant de commenter</strong></div>
+            <ReaderAuth onAuthChange={setUser} />
 
             <label className="feedback-label" htmlFor={`feedback-${type}`}>Œuvre à commenter</label>
             <select id={`feedback-${type}`} value={selectedId} onChange={(event) => { setSelectedId(event.target.value); setMessage(''); setError('') }}>
@@ -176,9 +173,10 @@ export default function Feedback({ type, items = [] }) {
             </div>
 
             <label className="feedback-label" htmlFor={`comment-${type}`}>Ton commentaire</label>
-            <textarea id={`comment-${type}`} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={user ? 'Qu’as-tu pensé de cette œuvre ?' : 'Connecte-toi pour écrire un commentaire.'} rows={5} maxLength={1000} disabled={!user} />
-            <div className="feedback-form-footer"><span>{comment.length}/1000</span><button className="feedback-submit" type="button" onClick={submitFeedback} disabled={sending || !user}>{sending ? <><Loader2 size={16} className="feedback-spin" /> Envoi...</> : <><Send size={16} /> Publier mon avis</>}</button></div>
-            {!user && <p className="feedback-auth-note"><UserRound size={15} /> Connecte-toi avec ton pseudo pour publier.</p>}
+            <textarea id={`comment-${type}`} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={user ? 'Qu’as-tu pensé de cette œuvre ?' : 'Choisis un pseudo pour écrire un commentaire.'} rows={5} maxLength={1000} disabled={!user} />
+            <div className="feedback-form-footer"><span>{comment.length}/1000</span><button className="feedback-submit" type="button" onClick={submitFeedback} disabled={sending || !user}>{sending ? <><Loader2 size={16} className="feedback-spin" /> Envoi...</> : <><Send size={16} /> Envoyer mon avis</>}</button></div>
+            {!user && <p className="feedback-auth-note"><UserRound size={15} /> Ton pseudo est nécessaire pour participer.</p>}
+            {user && comment.trim() && <p className="feedback-auth-note"><Clock3 size={15} /> Ton commentaire sera visible uniquement après validation de l’administrateur.</p>}
             {message && <p className="feedback-success">{message}</p>}
             {error && <p className="feedback-error">{error}</p>}
           </div>
@@ -186,11 +184,11 @@ export default function Feedback({ type, items = [] }) {
           <div className="feedback-results">
             <div className="feedback-summary">
               <div className="feedback-average"><strong>{average ? average.toFixed(1) : '—'}</strong><div className="average-stars">{[1, 2, 3, 4, 5].map((value) => <Star key={value} size={16} fill={value <= Math.round(average) ? 'currentColor' : 'none'} />)}</div><span>{ratings.length} note{ratings.length > 1 ? 's' : ''}</span></div>
-              <div className="feedback-summary-copy"><strong>{comments.length} commentaire{comments.length > 1 ? 's' : ''}</strong><span>Les avis récents des lecteurs.</span></div>
+              <div className="feedback-summary-copy"><strong>{comments.length} commentaire{comments.length > 1 ? 's' : ''}</strong><span>Les avis validés par l’administrateur.</span></div>
             </div>
 
             <div className="feedback-comments">
-              {loading ? <div className="feedback-loading"><Loader2 size={24} className="feedback-spin" /> Chargement des avis...</div> : comments.length === 0 ? <div className="feedback-loading"><MessageCircle size={24} /><span>Sois le premier à laisser un commentaire.</span></div> : comments.map((item) => <article className="feedback-comment" key={item.id}><div className="comment-avatar"><UserRound size={17} /></div><div><div className="comment-top"><strong>{item.pseudo || 'Lecteur MIMOUVERSE'}</strong><span>{item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : ''}</span></div><p>{item.content}</p></div></article>)}
+              {loading ? <div className="feedback-loading"><Loader2 size={24} className="feedback-spin" /> Chargement des avis...</div> : comments.length === 0 ? <div className="feedback-loading"><MessageCircle size={24} /><span>Aucun commentaire validé pour le moment.</span></div> : comments.map((item) => <article className="feedback-comment" key={item.id}><div className="comment-avatar"><UserRound size={17} /></div><div><div className="comment-top"><strong>{item.pseudo || 'Lecteur MIMOUVERSE'}</strong><span>{item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : ''}</span></div><p>{item.content}</p></div></article>)}
             </div>
           </div>
         </div>
