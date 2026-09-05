@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
-import { LogIn, UserPlus, LogOut, Loader2, UserRound } from 'lucide-react'
+import { Loader2, LogOut, UserPlus, UserRound } from 'lucide-react'
 import { supabase } from '../supabase.js'
 
 export default function ReaderAuth({ onAuthChange }) {
   const [user, setUser] = useState(null)
-  const [mode, setMode] = useState('login')
   const [pseudo, setPseudo] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -16,8 +13,9 @@ export default function ReaderAuth({ onAuthChange }) {
     if (!supabase) return undefined
 
     supabase.auth.getUser().then(({ data }) => {
-      setUser(data?.user || null)
-      onAuthChange?.(data?.user || null)
+      const nextUser = data?.user || null
+      setUser(nextUser)
+      onAuthChange?.(nextUser)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -29,54 +27,37 @@ export default function ReaderAuth({ onAuthChange }) {
     return () => listener?.subscription?.unsubscribe()
   }, [onAuthChange])
 
-  const submit = async (event) => {
+  const createReader = async (event) => {
     event.preventDefault()
     setError('')
     setMessage('')
 
+    const cleanPseudo = pseudo.trim()
     if (!supabase) {
       setError('Supabase n’est pas configuré.')
       return
     }
-
-    if (mode === 'signup' && !pseudo.trim()) {
+    if (!cleanPseudo) {
       setError('Choisis un pseudo.')
       return
     }
-
-    if (!email.trim() || !password) {
-      setError('Renseigne ton e-mail et ton mot de passe.')
+    if (cleanPseudo.length < 2) {
+      setError('Ton pseudo doit contenir au moins 2 caractères.')
       return
     }
 
     setLoading(true)
     try {
-      if (mode === 'signup') {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { data: { pseudo: pseudo.trim() } },
-        })
-        if (signUpError) throw signUpError
+      const { data, error: authError } = await supabase.auth.signInAnonymously({
+        options: { data: { pseudo: cleanPseudo } },
+      })
+      if (authError) throw authError
 
-        if (data?.session) {
-          setMessage(`Bienvenue ${pseudo.trim()} !`)
-        } else {
-          setMessage('Compte créé. Vérifie ton e-mail si la confirmation est demandée par Supabase.')
-          setMode('login')
-        }
-      } else {
-        const { data, error: loginError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        })
-        if (loginError) throw loginError
-        setUser(data?.user || null)
-        setMessage('Connexion réussie.')
-      }
-      setPassword('')
+      setUser(data?.user || null)
+      setMessage(`Bienvenue ${cleanPseudo} ! Tu restes connecté sur cet appareil.`)
+      setPseudo('')
     } catch (authError) {
-      setError(authError?.message || 'Impossible de se connecter pour le moment.')
+      setError(authError?.message || 'Impossible de créer ton identité de lecteur.')
     } finally {
       setLoading(false)
     }
@@ -85,7 +66,9 @@ export default function ReaderAuth({ onAuthChange }) {
   const logout = async () => {
     if (!supabase) return
     await supabase.auth.signOut()
+    setUser(null)
     setMessage('Tu es déconnecté.')
+    setError('')
   }
 
   if (user) {
@@ -94,9 +77,14 @@ export default function ReaderAuth({ onAuthChange }) {
       <div className="reader-auth-connected">
         <div className="reader-auth-identity">
           <span className="reader-auth-avatar"><UserRound size={18} /></span>
-          <div><strong>{displayPseudo}</strong><span>Connecté pour commenter</span></div>
+          <div>
+            <strong>{displayPseudo}</strong>
+            <span>Connecté pour commenter</span>
+          </div>
         </div>
-        <button type="button" className="reader-auth-logout" onClick={logout}><LogOut size={16} /> Déconnexion</button>
+        <button type="button" className="reader-auth-logout" onClick={logout}>
+          <LogOut size={16} /> Déconnexion
+        </button>
         {message && <p className="feedback-success">{message}</p>}
       </div>
     )
@@ -105,17 +93,25 @@ export default function ReaderAuth({ onAuthChange }) {
   return (
     <div className="reader-auth-card">
       <div className="reader-auth-tabs">
-        <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError(''); setMessage('') }}><LogIn size={16} /> Se connecter</button>
-        <button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setError(''); setMessage('') }}><UserPlus size={16} /> Créer un compte</button>
+        <div className="reader-auth-tab active"><UserPlus size={16} /> Créer mon pseudo</div>
       </div>
 
-      <form onSubmit={submit} className="reader-auth-form">
-        {mode === 'signup' && <label><span>Pseudo</span><input value={pseudo} onChange={(event) => setPseudo(event.target.value)} placeholder="Ton pseudo public" maxLength={30} autoComplete="nickname" /></label>}
-        <label><span>E-mail</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ton@email.com" autoComplete="email" /></label>
-        <label><span>Mot de passe</span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" minLength={6} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} /></label>
-        <button className="feedback-submit reader-auth-submit" type="submit" disabled={loading}>{loading ? <><Loader2 size={16} className="feedback-spin" /> Traitement...</> : mode === 'signup' ? <><UserPlus size={16} /> Créer mon compte</> : <><LogIn size={16} /> Se connecter</>}</button>
+      <form onSubmit={createReader} className="reader-auth-form">
+        <label>
+          <span>Pseudo public</span>
+          <input
+            value={pseudo}
+            onChange={(event) => setPseudo(event.target.value)}
+            placeholder="Ex. Koffi_225"
+            maxLength={30}
+            autoComplete="nickname"
+          />
+        </label>
+        <button className="feedback-submit reader-auth-submit" type="submit" disabled={loading}>
+          {loading ? <><Loader2 size={16} className="feedback-spin" /> Connexion...</> : <><UserPlus size={16} /> Continuer</>}
+        </button>
       </form>
-      <p className="reader-auth-help">Ton pseudo sera le nom visible par les autres lecteurs. Ton e-mail reste lié à ton compte.</p>
+      <p className="reader-auth-help">Ton pseudo est visible par les autres lecteurs. Aucun e-mail ni mot de passe n’est demandé.</p>
       {message && <p className="feedback-success">{message}</p>}
       {error && <p className="feedback-error">{error}</p>}
     </div>
