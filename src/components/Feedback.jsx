@@ -37,7 +37,7 @@ export default function Feedback({ type, items = [] }) {
 
       const [commentsResult, ratingsResult] = await Promise.all([
         supabase.from('comments').select('id, content, created_at, approved').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('ratings').select('id, rating, content, created_at').eq(idField, selectedId).order('created_at', { ascending: false }),
+        supabase.from('ratings').select('id, rating, created_at').eq(idField, selectedId).order('created_at', { ascending: false }),
       ])
 
       if (!active) return
@@ -89,7 +89,6 @@ export default function Feedback({ type, items = [] }) {
         const { error: ratingError } = await supabase.from('ratings').insert({
           [idField]: selectedId,
           rating,
-          content: comment.trim(),
         })
         if (ratingError) throw ratingError
       }
@@ -109,7 +108,7 @@ export default function Feedback({ type, items = [] }) {
 
       const [commentsResult, ratingsResult] = await Promise.all([
         supabase.from('comments').select('id, content, created_at, approved').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('ratings').select('id, rating, content, created_at').eq(idField, selectedId).order('created_at', { ascending: false }),
+        supabase.from('ratings').select('id, rating, created_at').eq(idField, selectedId).order('created_at', { ascending: false }),
       ])
       if (!commentsResult.error) setComments(commentsResult.data || [])
       if (!ratingsResult.error) setRatings(ratingsResult.data || [])
