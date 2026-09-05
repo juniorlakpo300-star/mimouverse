@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Bot, BookOpen, Compass, ExternalLink, Send, Sparkles, WandSparkles } from 'lucide-react'
 
 const suggestions = [
@@ -17,6 +18,68 @@ const quickLinks = [
 const starterMessages = [
   { role: 'assistant', text: 'Bonjour 👋 Je suis MIA, l’assistante de MIMOUVERSE. Je peux chercher dans le catalogue, te recommander des œuvres et t’aider à découvrir le site.' },
 ]
+
+function cleanText(text = '') {
+  return String(text)
+    .replace(/\\([*_`#])/g, '$1')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .trim()
+}
+
+function MiaText({ text }) {
+  const cleaned = cleanText(text)
+  const parts = cleaned.split(/(\/livres|\/manga|\/dictionnaire|\/mia|\/participer)/g)
+
+  return (
+    <div className="mia-text">
+      {parts.map((part, index) => {
+        const knownPaths = ['/livres', '/manga', '/dictionnaire', '/mia', '/participer']
+        if (knownPaths.includes(part)) {
+          return <Link className="mia-inline-link" to={part} key={`${part}-${index}`}>{part}</Link>
+        }
+        return <span key={index}>{part}</span>
+      })}
+    </div>
+  )
+}
+
+function MiaItemCard({ item }) {
+  const isManga = item.type === 'manga'
+  return (
+    <article className="mia-item-card">
+      {item.cover_url ? (
+        <img src={item.cover_url} alt={`Couverture de ${item.title}`} className="mia-item-cover" loading="lazy" />
+      ) : (
+        <div className="mia-item-cover mia-cover-fallback"><BookOpen size={28} /></div>
+      )}
+      <div className="mia-item-content">
+        <div className="mia-item-type">{isManga ? 'MANGA' : 'LIVRE'}</div>
+        <h3>{item.title}</h3>
+        <p className="mia-item-author">{item.author}</p>
+        {item.category && <span className="mia-item-category">{item.category}</span>}
+        {item.description && <p className="mia-item-description">{item.description}</p>}
+        <Link className="mia-item-button" to={isManga ? '/manga' : '/livres'}>
+          <span>Voir l’œuvre</span>
+          <ExternalLink size={15} />
+        </Link>
+      </div>
+    </article>
+  )
+}
+
+function MiaActions({ navigation = [] }) {
+  if (!navigation.length) return null
+  return (
+    <div className="mia-actions">
+      {navigation.map((page) => (
+        <Link className="mia-action-button" to={page.path} key={page.path}>
+          <Compass size={15} />
+          {page.name}
+        </Link>
+      ))}
+    </div>
+  )
+}
 
 export default function Mia() {
   const [messages, setMessages] = useState(starterMessages)
@@ -44,16 +107,20 @@ export default function Mia() {
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || 'MIA est momentanément indisponible.')
 
-      setMessages((current) => [...current, { role: 'assistant', text: data.reply || 'Je n’ai pas réussi à formuler une réponse.' }])
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          text: data.reply || 'Je n’ai pas réussi à formuler une réponse.',
+          items: Array.isArray(data.items) ? data.items : [],
+          navigation: Array.isArray(data.navigation) ? data.navigation : [],
+        },
+      ])
     } catch (error) {
       setMessages((current) => [...current, { role: 'assistant', text: `Désolée 😕 ${error.message || 'Une erreur est survenue.'}` }])
     } finally {
       setLoading(false)
     }
-  }
-
-  const openPage = (path) => {
-    window.location.href = path
   }
 
   return (
@@ -81,7 +148,15 @@ export default function Mia() {
           {messages.map((message, index) => (
             <div className={`mia-message ${message.role}`} key={`${message.role}-${index}`}>
               {message.role === 'assistant' && <div className="mia-mini-avatar"><Bot size={16} /></div>}
-              <div className="mia-bubble">{message.text}</div>
+              <div className="mia-response-wrap">
+                <div className="mia-bubble"><MiaText text={message.text} /></div>
+                {message.role === 'assistant' && message.items?.length > 0 && (
+                  <div className="mia-items-grid">
+                    {message.items.map((item) => <MiaItemCard item={item} key={`${item.type}-${item.id}-${item.title}`} />)}
+                  </div>
+                )}
+                {message.role === 'assistant' && <MiaActions navigation={message.navigation} />}
+              </div>
             </div>
           ))}
           {loading && (
@@ -102,11 +177,11 @@ export default function Mia() {
           <div className="mia-quick-title"><Compass size={15} /> Accès rapide</div>
           <div className="mia-quick-grid">
             {quickLinks.map(({ label, path, icon: Icon }) => (
-              <button key={path} type="button" onClick={() => openPage(path)} disabled={loading}>
+              <Link className="mia-quick-button" key={path} to={path} aria-disabled={loading}>
                 <Icon size={17} />
                 <span>{label}</span>
                 <ExternalLink size={14} />
-              </button>
+              </Link>
             ))}
           </div>
         </div>
