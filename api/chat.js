@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+const GEMINI_MODEL = process.env.MIA_GEMINI_MODEL || 'gemini-3.1-flash-lite'
 
 function json(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8')
@@ -83,23 +84,23 @@ Règles importantes :
 Catalogue actuel MIMOUVERSE :
 ${catalogText}`
 
-    const contents = [
-      {
-        role: 'user',
-        parts: [{ text: systemPrompt }],
-      },
-      ...cleanMessages.map((message) => ({
-        role: message.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: message.content }],
-      })),
-    ]
+    const contents = cleanMessages.map((message) => ({
+      role: message.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: message.content }],
+    }))
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY,
+        },
         body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }],
+          },
           contents,
           generationConfig: {
             temperature: 0.7,
@@ -109,11 +110,13 @@ ${catalogText}`
       },
     )
 
-    const data = await response.json()
+    const data = await response.json().catch(() => ({}))
 
     if (!response.ok) {
-      console.error('Gemini MIA error:', data)
-      return json(res, 502, { error: 'Le moteur de MIA rencontre momentanément un problème.' })
+      console.error('Gemini MIA error:', response.status, data)
+      return json(res, 502, {
+        error: 'Le moteur de MIA rencontre momentanément un problème.',
+      })
     }
 
     const reply = data?.candidates?.[0]?.content?.parts
@@ -121,7 +124,10 @@ ${catalogText}`
       .join(' ')
       .trim()
 
-    if (!reply) return json(res, 502, { error: 'MIA n’a pas reçu de réponse exploitable.' })
+    if (!reply) {
+      console.error('Gemini MIA empty response:', data)
+      return json(res, 502, { error: 'MIA n’a pas reçu de réponse exploitable.' })
+    }
 
     return json(res, 200, { reply })
   } catch (error) {
