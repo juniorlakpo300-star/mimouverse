@@ -14,6 +14,7 @@ import './participation-admin.css'
 import './participation-redesign.css'
 import './publication-redesign.css'
 import './admin-gate.css'
+import './visual-overhaul.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
