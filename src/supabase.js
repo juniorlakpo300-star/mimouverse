@@ -1,8 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '')
-const publishableKey = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim()
-const anonKey = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
+function cleanEnvValue(value) {
+  const cleaned = String(value || '').trim()
+  if (
+    cleaned.length >= 2 &&
+    ((cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+      (cleaned.startsWith("'") && cleaned.endsWith("'")))
+  ) {
+    return cleaned.slice(1, -1).trim()
+  }
+  return cleaned
+}
+
+const supabaseUrl = cleanEnvValue(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, '')
+const publishableKey = cleanEnvValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+const anonKey = cleanEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY)
 const supabaseKey = publishableKey || anonKey
 
 export const supabase = supabaseUrl && supabaseKey
