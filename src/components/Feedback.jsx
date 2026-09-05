@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { MessageCircle, Send, Star, Loader2, UserRound } from 'lucide-react'
+import { MessageCircle, Send, Star, Loader2, UserRound, ShieldCheck } from 'lucide-react'
 import { supabase } from '../supabase.js'
+import ReaderAuth from './ReaderAuth.jsx'
 
 export default function Feedback({ type, items = [] }) {
   const isManga = type === 'manga'
@@ -12,6 +13,7 @@ export default function Feedback({ type, items = [] }) {
   const [ratings, setRatings] = useState([])
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [message, setMessage] = useState('')
@@ -23,36 +25,43 @@ export default function Feedback({ type, items = [] }) {
   }, [items, selectedId])
 
   useEffect(() => {
-    let active = true
+    if (!supabase) return undefined
 
-    const loadFeedback = async () => {
-      if (!supabase || !selectedId) {
-        setComments([])
-        setRatings([])
-        return
-      }
-
-      setLoading(true)
+    supabase.auth.getUser().then(({ data }) => setUser(data?.user || null))
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
       setError('')
+    })
+    return () => listener?.subscription?.unsubscribe()
+  }, [])
 
-      const [commentsResult, ratingsResult] = await Promise.all([
-        supabase.from('comments').select('id, content, created_at, approved').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('ratings').select('id, rating, created_at').eq(idField, selectedId).order('created_at', { ascending: false }),
-      ])
-
-      if (!active) return
-
-      if (commentsResult.error) setError(commentsResult.error.message)
-      else setComments(commentsResult.data || [])
-
-      if (ratingsResult.error && !commentsResult.error) setError(ratingsResult.error.message)
-      else setRatings(ratingsResult.data || [])
-
-      setLoading(false)
+  const loadFeedback = async () => {
+    if (!supabase || !selectedId) {
+      setComments([])
+      setRatings([])
+      return
     }
 
+    setLoading(true)
+    setError('')
+
+    const [commentsResult, ratingsResult] = await Promise.all([
+      supabase.from('comments').select('id, content, created_at, approved, user_id').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
+      supabase.from('ratings').select('id, rating, created_at, user_id').eq(idField, selectedId).order('created_at', { ascending: false }),
+    ])
+
+    if (commentsResult.error) setError(commentsResult.error.message)
+    else setComments(commentsResult.data || [])
+
+    if (ratingsResult.error && !commentsResult.error) setError(ratingsResult.error.message)
+    else setRatings(ratingsResult.data || [])
+
+    setLoading(false)
+  }
+
+  useEffect(() => {
     loadFeedback()
-    return () => { active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idField, selectedId])
 
   const average = useMemo(() => {
@@ -61,6 +70,7 @@ export default function Feedback({ type, items = [] }) {
   }, [ratings])
 
   const selectedItem = items.find((item) => item.id === selectedId)
+  const displayPseudo = user?.user_metadata?.pseudo || user?.user_metadata?.username || 'Lecteur MIMOUVERSE'
 
   const submitFeedback = async (event) => {
     event.preventDefault()
@@ -69,6 +79,11 @@ export default function Feedback({ type, items = [] }) {
 
     if (!supabase) {
       setError('Supabase n’est pas configuré.')
+      return
+    }
+
+    if (!user) {
+      setError('Connecte-toi avec ton pseudo avant de publier un avis.')
       return
     }
 
@@ -88,6 +103,7 @@ export default function Feedback({ type, items = [] }) {
       if (rating) {
         const { error: ratingError } = await supabase.from('ratings').insert({
           [idField]: selectedId,
+          user_id: user.id,
           rating,
         })
         if (ratingError) throw ratingError
@@ -96,6 +112,7 @@ export default function Feedback({ type, items = [] }) {
       if (comment.trim()) {
         const { error: commentError } = await supabase.from('comments').insert({
           [idField]: selectedId,
+          user_id: user.id,
           content: comment.trim(),
           approved: true,
         })
@@ -104,14 +121,8 @@ export default function Feedback({ type, items = [] }) {
 
       setRating(0)
       setComment('')
-      setMessage('Merci ! Ton avis a bien été enregistré.')
-
-      const [commentsResult, ratingsResult] = await Promise.all([
-        supabase.from('comments').select('id, content, created_at, approved').eq(idField, selectedId).eq('approved', true).order('created_at', { ascending: false }),
-        supabase.from('ratings').select('id, rating, created_at').eq(idField, selectedId).order('created_at', { ascending: false }),
-      ])
-      if (!commentsResult.error) setComments(commentsResult.data || [])
-      if (!ratingsResult.error) setRatings(ratingsResult.data || [])
+      setMessage(`Merci ${displayPseudo} ! Ton avis a bien été enregistré.`)
+      await loadFeedback()
     } catch (submitError) {
       setError(submitError?.message || 'Impossible d’enregistrer ton avis pour le moment.')
     } finally {
@@ -125,7 +136,7 @@ export default function Feedback({ type, items = [] }) {
         <div>
           <span className="kicker">Communauté MIMOUVERSE</span>
           <h2>Commentaires & notation</h2>
-          <p>Choisis une œuvre, donne une note et partage ton avis avec les autres lecteurs.</p>
+          <p>Choisis une œuvre, connecte-toi avec ton pseudo et partage ton avis avec les autres lecteurs.</p>
         </div>
         <div className="feedback-icon"><MessageCircle size={24} /></div>
       </div>
@@ -139,6 +150,9 @@ export default function Feedback({ type, items = [] }) {
       ) : (
         <div className="feedback-layout">
           <div className="feedback-form-card">
+            <div className="feedback-auth-title"><ShieldCheck size={18} /><strong>Identifie-toi avant de commenter</strong></div>
+            <ReaderAuth />
+
             <label className="feedback-label" htmlFor={`feedback-${type}`}>Œuvre à commenter</label>
             <select id={`feedback-${type}`} value={selectedId} onChange={(event) => { setSelectedId(event.target.value); setMessage(''); setError('') }}>
               {items.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}
@@ -153,7 +167,7 @@ export default function Feedback({ type, items = [] }) {
               <span className="feedback-label">Ta note</span>
               <div className="star-picker" aria-label="Choisir une note de 1 à 5">
                 {[1, 2, 3, 4, 5].map((value) => (
-                  <button type="button" key={value} className={value <= rating ? 'star-button active' : 'star-button'} onClick={() => setRating(value)} aria-label={`${value} étoile${value > 1 ? 's' : ''}`}>
+                  <button type="button" key={value} className={value <= rating ? 'star-button active' : 'star-button'} onClick={() => setRating(value)} aria-label={`${value} étoile${value > 1 ? 's' : ''}`} disabled={!user}>
                     <Star size={23} fill={value <= rating ? 'currentColor' : 'none'} />
                   </button>
                 ))}
@@ -161,8 +175,9 @@ export default function Feedback({ type, items = [] }) {
             </div>
 
             <label className="feedback-label" htmlFor={`comment-${type}`}>Ton commentaire</label>
-            <textarea id={`comment-${type}`} value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Qu’as-tu pensé de cette œuvre ?" rows={5} maxLength={1000} />
-            <div className="feedback-form-footer"><span>{comment.length}/1000</span><button className="feedback-submit" type="button" onClick={submitFeedback} disabled={sending}>{sending ? <><Loader2 size={16} className="feedback-spin" /> Envoi...</> : <><Send size={16} /> Publier mon avis</>}</button></div>
+            <textarea id={`comment-${type}`} value={comment} onChange={(event) => setComment(event.target.value)} placeholder={user ? 'Qu’as-tu pensé de cette œuvre ?' : 'Connecte-toi pour écrire un commentaire.'} rows={5} maxLength={1000} disabled={!user} />
+            <div className="feedback-form-footer"><span>{comment.length}/1000</span><button className="feedback-submit" type="button" onClick={submitFeedback} disabled={sending || !user}>{sending ? <><Loader2 size={16} className="feedback-spin" /> Envoi...</> : <><Send size={16} /> Publier mon avis</>}</button></div>
+            {!user && <p className="feedback-auth-note"><UserRound size={15} /> Connecte-toi avec ton pseudo pour publier.</p>}
             {message && <p className="feedback-success">{message}</p>}
             {error && <p className="feedback-error">{error}</p>}
           </div>
@@ -174,7 +189,7 @@ export default function Feedback({ type, items = [] }) {
             </div>
 
             <div className="feedback-comments">
-              {loading ? <div className="feedback-loading"><Loader2 size={24} className="feedback-spin" /> Chargement des avis...</div> : comments.length === 0 ? <div className="feedback-loading"><MessageCircle size={24} /><span>Sois le premier à laisser un commentaire.</span></div> : comments.map((item) => <article className="feedback-comment" key={item.id}><div className="comment-avatar"><UserRound size={17} /></div><div><div className="comment-top"><strong>Lecteur MIMOUVERSE</strong><span>{item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : ''}</span></div><p>{item.content}</p></div></article>)}
+              {loading ? <div className="feedback-loading"><Loader2 size={24} className="feedback-spin" /> Chargement des avis...</div> : comments.length === 0 ? <div className="feedback-loading"><MessageCircle size={24} /><span>Sois le premier à laisser un commentaire.</span></div> : comments.map((item) => <article className="feedback-comment" key={item.id}><div className="comment-avatar"><UserRound size={17} /></div><div><div className="comment-top"><strong>{item.user_id === user?.id ? displayPseudo : 'Lecteur MIMOUVERSE'}</strong><span>{item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR') : ''}</span></div><p>{item.content}</p></div></article>)}
             </div>
           </div>
         </div>
