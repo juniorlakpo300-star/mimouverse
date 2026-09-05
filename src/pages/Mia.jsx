@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { Bot, BookOpen, Send, Sparkles, WandSparkles } from 'lucide-react'
+import { Bot, BookOpen, Compass, ExternalLink, Send, Sparkles, WandSparkles } from 'lucide-react'
 
 const suggestions = [
   'Recommande-moi un livre',
   'Quels livres sont disponibles ?',
   'Quels mangas sont disponibles ?',
   'Comment fonctionne MIMOUVERSE ?',
+]
+
+const quickLinks = [
+  { label: 'Voir les livres', path: '/livres', icon: BookOpen },
+  { label: 'Voir les mangas', path: '/manga', icon: Sparkles },
+  { label: 'Dictionnaire', path: '/dictionnaire', icon: Compass },
 ]
 
 const starterMessages = [
@@ -46,6 +52,10 @@ export default function Mia() {
     }
   }
 
+  const openPage = (path) => {
+    window.location.href = path
+  }
+
   return (
     <main className="mia-page">
       <section className="mia-hero">
@@ -77,7 +87,7 @@ export default function Mia() {
           {loading && (
             <div className="mia-message assistant">
               <div className="mia-mini-avatar"><Bot size={16} /></div>
-              <div className="mia-bubble">MIA prépare sa réponse…</div>
+              <div className="mia-bubble mia-thinking"><span /> <span /> <span /> MIA prépare sa réponse…</div>
             </div>
           )}
         </div>
@@ -86,6 +96,19 @@ export default function Mia() {
           {suggestions.map((suggestion) => (
             <button key={suggestion} onClick={() => sendMessage(suggestion)} disabled={loading}>{suggestion}</button>
           ))}
+        </div>
+
+        <div className="mia-quick-links">
+          <div className="mia-quick-title"><Compass size={15} /> Accès rapide</div>
+          <div className="mia-quick-grid">
+            {quickLinks.map(({ label, path, icon: Icon }) => (
+              <button key={path} type="button" onClick={() => openPage(path)} disabled={loading}>
+                <Icon size={17} />
+                <span>{label}</span>
+                <ExternalLink size={14} />
+              </button>
+            ))}
+          </div>
         </div>
 
         <form className="mia-input-row" onSubmit={(event) => { event.preventDefault(); sendMessage() }}>
