@@ -1,6 +1,7 @@
 import { BookOpen, Heart, Search, ArrowRight, Loader2, Quote, X, Maximize2, Download, ArrowLeft } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabase.js'
+import Feedback from '../components/Feedback.jsx'
 
 const FALLBACK_COVER = 'https://placehold.co/400x560/111827/94a3b8?text=MIMOUVERSE'
 const AFRICAN_QUOTE = { text: 'La culture est au début et à la fin de tout.', author: 'Léopold Sédar Senghor' }
@@ -44,6 +45,8 @@ export default function Livres() {
     <section className="book-section"><div className="section-heading"><div><span className="kicker">Catalogue réel</span><h2>Livres publiés</h2></div><span className="result-count">{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span></div>
       {loading ? <div className="empty-state"><Loader2 size={30}/><h3>Chargement des livres...</h3><p>Connexion au catalogue MIMOUVERSE.</p></div> : error ? <div className="empty-state"><BookOpen size={30}/><h3>Catalogue temporairement indisponible</h3><p>{error}</p></div> : filtered.length === 0 ? <div className="empty-state"><BookOpen size={30}/><h3>Aucun livre publié</h3><p>Les nouveaux livres apparaîtront ici dès leur publication.</p></div> : <div className="book-grid">{filtered.map((book) => <article className="book-card" key={book.id}><div className="book-cover" style={{background:'linear-gradient(145deg,#312e81,#0f172a)'}}><img src={book.cover} alt={`Couverture de ${book.title}`} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:12}} onError={(e) => { e.currentTarget.src = FALLBACK_COVER }}/><button aria-label="Ajouter aux favoris" className={favorites.includes(book.id) ? 'favorite selected' : 'favorite'} onClick={() => toggleFavorite(book.id)}><Heart size={18} fill={favorites.includes(book.id) ? 'currentColor' : 'none'}/></button></div><div className="book-info"><span className="book-category">{book.category}</span><h3>{book.title}</h3><p>{book.author}</p>{book.description && <p>{book.description}</p>}<div className="book-actions"><button className="read-button" disabled={!book.file} onClick={() => book.file && setReader(book)}>{book.file ? <>Lire sur MIMOUVERSE <ArrowRight size={16}/></> : 'Fichier indisponible'}</button>{book.file && <a className="download-button" href={book.file} download aria-label={`Télécharger le PDF de ${book.title}`}><Download size={16}/> Télécharger PDF</a>}</div></div></article>)}</div>}
     </section>
+
+    <Feedback type="book" items={books} />
 
     {reader && <div className="book-reader-overlay" role="dialog" aria-modal="true" aria-label={`Lecture de ${reader.title}`}>
       <div className="book-reader-shell">
