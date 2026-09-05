@@ -15,6 +15,7 @@ import './participation-redesign.css'
 import './publication-redesign.css'
 import './admin-gate.css'
 import './visual-overhaul.css'
+import './book-reader.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
