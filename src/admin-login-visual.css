@@ -1,0 +1,169 @@
+/* MIMOUVERSE — accès administrateur : couche visuelle uniquement */
+.admin-gate {
+  position: relative;
+  min-height: calc(100vh - 80px);
+  display: grid;
+  place-items: center;
+  padding: 48px 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(124, 58, 237, .20), transparent 30%),
+    radial-gradient(circle at 82% 80%, rgba(37, 99, 235, .16), transparent 34%),
+    #05060b;
+}
+
+.admin-gate::before,
+.admin-gate::after {
+  content: '';
+  position: absolute;
+  border: 1px solid rgba(167, 139, 250, .12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.admin-gate::before { width: 520px; height: 520px; top: -260px; right: -180px; }
+.admin-gate::after { width: 430px; height: 430px; bottom: -250px; left: -180px; }
+
+.admin-login-card,
+.admin-gate-card {
+  position: relative;
+  z-index: 1;
+  width: min(470px, 100%);
+  padding: 42px;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 30px;
+  background: linear-gradient(145deg, rgba(17, 21, 34, .96), rgba(8, 10, 18, .96));
+  box-shadow: 0 35px 100px rgba(0,0,0,.48), 0 0 70px rgba(124,58,237,.08);
+  text-align: left;
+}
+
+.admin-login-card::before,
+.admin-gate-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(167,139,250,.28), transparent 45%, rgba(59,130,246,.18));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.admin-login-icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 0 24px;
+  display: grid;
+  place-items: center;
+  color: #c4b5fd;
+  border: 1px solid rgba(167,139,250,.22);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(124,58,237,.20), rgba(37,99,235,.10));
+  box-shadow: 0 14px 35px rgba(76,29,149,.20);
+}
+
+.admin-login-card .kicker {
+  display: inline-flex;
+  padding: 7px 11px;
+  border: 1px solid rgba(167,139,250,.18);
+  border-radius: 999px;
+  color: #c4b5fd;
+  background: rgba(124,58,237,.08);
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+
+.admin-gate-card h1,
+.admin-login-card h1 {
+  margin: 16px 0 10px;
+  color: #f8fafc;
+  font-size: clamp(30px, 5vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -.045em;
+}
+
+.admin-gate-card p,
+.admin-login-card > p {
+  margin: 0 0 28px;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+
+.admin-login-card form { display: grid; gap: 18px; }
+
+.admin-login-card label {
+  display: grid;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-login-card input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 15px;
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 14px;
+  outline: none;
+  background: rgba(5,6,11,.72);
+  color: #f8fafc;
+  font: inherit;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+
+.admin-login-card input::placeholder { color: #64748b; }
+.admin-login-card input:focus {
+  border-color: rgba(167,139,250,.70);
+  background: rgba(8,10,18,.94);
+  box-shadow: 0 0 0 4px rgba(124,58,237,.12);
+}
+
+.admin-google-button {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #8b5cf6, #4f46e5);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 14px 35px rgba(79,70,229,.25);
+  transition: transform .2s, box-shadow .2s, filter .2s;
+}
+
+.admin-google-button:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(79,70,229,.34); filter: brightness(1.06); }
+.admin-google-button:disabled { opacity: .65; cursor: wait; transform: none; }
+
+.admin-login-error {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(248,113,113,.20);
+  border-radius: 13px;
+  background: rgba(127,29,29,.16);
+  color: #fca5a5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-login-card > small {
+  display: block;
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 10px;
+  word-break: break-word;
+}
+
+@media (max-width: 620px) {
+  .admin-gate { min-height: calc(100vh - 65px); padding: 28px 15px; }
+  .admin-login-card, .admin-gate-card { padding: 30px 21px; border-radius: 24px; }
+  .admin-login-icon { width: 60px; height: 60px; }
+}
