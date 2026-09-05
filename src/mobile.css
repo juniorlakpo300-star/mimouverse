@@ -1,0 +1,113 @@
+/* MIMOUVERSE — responsive Android / iPhone */
+html { -webkit-text-size-adjust: 100%; }
+body { overflow-x: hidden; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+
+@media (max-width: 900px) {
+  .navbar { height: auto; min-height: 68px; padding: 10px 16px; gap: 12px; flex-wrap: wrap; }
+  .brand { font-size: 18px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+  .navbar nav { order: 3; width: 100%; overflow-x: auto; gap: 8px; padding: 2px 0 5px; scrollbar-width: none; }
+  .navbar nav::-webkit-scrollbar { display: none; }
+  .navbar nav a { flex: 0 0 auto; padding: 9px 12px; border-radius: 999px; background: rgba(15,23,42,.65); border: 1px solid rgba(148,163,184,.10); font-size: 13px; }
+  .navbar-actions { margin-left: auto; display: flex; gap: 6px; }
+  .navbar-actions .participate-link, .navbar-actions .admin-link { padding: 8px 10px; font-size: 12px; }
+  .navbar-actions .participate-link:first-child { font-size: 0; }
+  .navbar-actions .participate-link:first-child svg { margin: 0; }
+
+  .hero { min-height: 540px; padding: 75px 20px 60px; }
+  .hero h1 { font-size: clamp(40px, 13vw, 62px); }
+  .hero p { font-size: 16px; line-height: 1.5; }
+  .hero-actions { width: 100%; }
+  .hero-actions .button { width: 100%; justify-content: center; min-height: 48px; }
+  .section { padding: 50px 18px 75px; }
+  .section-heading { display: block; margin-bottom: 22px; }
+  .section-heading p { margin-top: 12px; }
+  .feature-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .feature-card { min-height: 200px; padding: 18px; border-radius: 17px; }
+  .feature-card h3 { font-size: 17px; }
+  .feature-card p { font-size: 13px; }
+
+  .library-page { padding: 30px 16px 70px; }
+  .library-hero { display: block; padding: 20px 0 30px; }
+  .library-hero h1 { font-size: clamp(40px, 13vw, 60px); }
+  .library-stat { margin-top: 22px; min-width: 0; }
+  .library-tools { padding: 14px; margin-bottom: 30px; }
+  .search-box { min-height: 48px; }
+  .category-list { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 3px; scrollbar-width: none; }
+  .category-list::-webkit-scrollbar { display: none; }
+  .category { flex: 0 0 auto; min-height: 40px; }
+  .book-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .book-cover { height: 230px; }
+  .book-cover>span { font-size: 82px; }
+  .book-info { padding: 14px; }
+  .book-info h3 { font-size: 17px; }
+  .book-info p { font-size: 12px; }
+  .read-button { min-height: 44px; }
+
+  .manga-hero { min-height: 0; padding: 55px 18px 45px; display: block; }
+  .manga-hero h1 { font-size: clamp(45px, 14vw, 65px); }
+  .manga-hero-copy>p { font-size: 14px; }
+  .manga-hero-actions { gap: 10px; }
+  .manga-hero-actions .button { width: 100%; justify-content: center; min-height: 48px; }
+  .manga-stack { width: 270px; height: 270px; margin: 35px auto 0; transform: scale(.9) rotate(4deg); }
+  .manga-content { padding: 20px 18px 75px; }
+  .manga-section-heading { display: block; }
+  .manga-section-heading p { margin-top: 10px; }
+  .manga-tools { margin-bottom: 35px; }
+  .manga-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .manga-cover { height: 240px; padding: 14px; }
+
+  .mia-page { padding-left: 0; padding-right: 0; }
+  .mia-hero { padding: 55px 18px 35px !important; }
+  .mia-hero h1 { font-size: clamp(42px, 14vw, 62px) !important; }
+  .mia-chat-shell { width: calc(100% - 20px) !important; margin: 0 10px 35px !important; border-radius: 20px !important; }
+  .mia-chat-header { padding: 13px 14px !important; }
+  .mia-messages { min-height: 300px !important; max-height: 52vh !important; padding: 14px !important; }
+  .mia-message { max-width: 100% !important; }
+  .mia-bubble { max-width: calc(100vw - 70px) !important; font-size: 14px !important; line-height: 1.55 !important; }
+  .mia-items-grid { grid-template-columns: 1fr !important; }
+  .mia-item-card { min-width: 0; }
+  .mia-item-cover { width: 92px !important; height: 120px !important; }
+  .mia-suggestions { overflow-x: auto; flex-wrap: nowrap !important; padding: 10px 12px !important; scrollbar-width: none; }
+  .mia-suggestions::-webkit-scrollbar { display: none; }
+  .mia-suggestions button { flex: 0 0 auto; min-height: 40px; }
+  .mia-quick-grid { grid-template-columns: 1fr !important; }
+  .mia-input-row { padding: 10px !important; }
+  .mia-input-row input { min-height: 48px; }
+  .mia-input-row button { width: 48px; min-width: 48px; height: 48px; }
+
+  .participation-page { padding: 35px 14px 70px !important; }
+  .participation-card { width: 100% !important; padding: 24px 18px !important; border-radius: 20px !important; }
+  .participation-card form input { min-height: 48px; }
+  .participation-card .button { width: 100%; justify-content: center; min-height: 48px; }
+
+  .admin-page, .admin-login-page { padding-left: 14px !important; padding-right: 14px !important; }
+  .admin-grid { grid-template-columns: 1fr !important; }
+  .admin-card { min-width: 0 !important; }
+
+  footer { padding: 25px 16px !important; text-align: center; font-size: 12px; }
+}
+
+@media (max-width: 520px) {
+  .navbar-actions .admin-link { display: none; }
+  .feature-grid, .book-grid, .manga-grid { grid-template-columns: 1fr; }
+  .feature-card { min-height: 165px; }
+  .book-cover { height: 320px; }
+  .manga-cover { height: 330px; }
+  .library-hero h1 { font-size: 44px; }
+  .manga-hero h1 { font-size: 48px; }
+  .mia-capabilities { flex-wrap: wrap; }
+}
+
+@media (max-width: 360px) {
+  .brand > span:last-child { display: none; }
+  .navbar { padding-left: 10px; padding-right: 10px; }
+  .hero { padding-left: 14px; padding-right: 14px; }
+  .book-cover { height: 280px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .button:hover, .feature-card:hover, .book-card:hover, .manga-card:hover { transform: none; }
+  button, a { touch-action: manipulation; }
+}

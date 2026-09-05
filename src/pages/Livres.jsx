@@ -1,211 +1,61 @@
+import { BookOpen, Heart, Search, ArrowRight, Loader2, Quote, X, Maximize2, Download, ArrowLeft } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Search, BookOpen, Star, Users, RefreshCw } from 'lucide-react'
 import { supabase } from '../supabase.js'
+import Feedback from '../components/Feedback.jsx'
+
+const FALLBACK_COVER = 'https://placehold.co/400x560/111827/94a3b8?text=MIMOUVERSE'
+const AFRICAN_QUOTE = { text: 'La culture est au début et à la fin de tout.', author: 'Léopold Sédar Senghor' }
+
+function normalizeBook(row, index) {
+  return { id: row.id || `book-${index}`, title: row.title || row.name || row.nom || 'Sans titre', author: row.author || row.author_name || row.auteur || 'Auteur inconnu', category: row.category || row.genre || 'Livre', description: row.description || '', cover: row.cover_url || row.cover || row.image_url || row.thumbnail_url || FALLBACK_COVER, file: row.pdf_url || row.file_url || row.pdf || row.file || row.document_url || '' }
+}
 
 export default function Livres() {
-  const [books, setBooks] = useState([])
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('Tous')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  async function loadBooks() {
-    if (!supabase) {
-      setError('Supabase n’est pas correctement configuré.')
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    const result = await supabase
-      .from('books')
-      .select('id, title, author, description, category, cover_url, pdf_url, rating, readers_count, created_at')
-      .eq('published', true)
-      .order('created_at', { ascending: false })
-
-    if (result.error) {
-      console.error('Erreur Supabase :', result.error)
-      setError('Impossible de charger les livres pour le moment.')
-      setBooks([])
-    } else {
-      setBooks(result.data || [])
-    }
-
-    setLoading(false)
-  }
+  const [books, setBooks] = useState([]), [query, setQuery] = useState(''), [category, setCategory] = useState('Tous'), [favorites, setFavorites] = useState([]), [loading, setLoading] = useState(true), [error, setError] = useState('')
+  const [reader, setReader] = useState(null)
 
   useEffect(() => {
-    loadBooks()
+    let active = true
+    const load = async () => {
+      if (!supabase) { setError('Supabase n’est pas configuré.'); setLoading(false); return }
+      const { data, error: queryError } = await supabase.from('books').select('*').order('created_at', { ascending: false })
+      if (!active) return
+      if (queryError) setError(queryError.message)
+      else setBooks((data || []).map(normalizeBook))
+      setLoading(false)
+    }
+    load()
+    return () => { active = false }
   }, [])
 
-  const categories = useMemo(() => {
-    const values = books
-      .map((book) => book.category)
-      .filter((value) => value)
+  useEffect(() => {
+    const onKeyDown = (event) => { if (event.key === 'Escape') setReader(null) }
+    if (reader) window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [reader])
 
-    return ['Tous', ...new Set(values)]
-  }, [books])
+  const categories = useMemo(() => ['Tous', ...Array.from(new Set(books.map((book) => book.category).filter(Boolean)))], [books])
+  const filtered = useMemo(() => books.filter((book) => { const text = `${book.title} ${book.author} ${book.category}`.toLowerCase(); return text.includes(query.toLowerCase()) && (category === 'Tous' || book.category === category) }), [books, query, category])
+  const toggleFavorite = (id) => setFavorites((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id])
 
-  const filteredBooks = useMemo(() => {
-    const query = search.trim().toLowerCase()
+  return <main className="library-page">
+    <section className="library-hero"><div><span className="kicker">Bibliothèque MIMOUVERSE</span><h1>Des histoires à <span>vivre.</span></h1><p>Explore les livres réellement publiés sur MIMOUVERSE.</p></div><div className="library-stat"><strong>{books.length}</strong><span>ouvrages disponibles</span></div></section>
+    <section className="library-quote"><div><span className="quote-label"><Quote size={11}/> Parole d’un écrivain africain</span><p className="quote-text">« {AFRICAN_QUOTE.text} »</p><p className="quote-author">— {AFRICAN_QUOTE.author}</p></div></section>
+    <section className="library-tools"><label className="search-box"><Search size={19}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher un livre ou un auteur..." /></label><div className="category-list">{categories.map((item) => <button className={category === item ? 'category active' : 'category'} key={item} onClick={() => setCategory(item)}>{item}</button>)}</div></section>
+    <section className="book-section"><div className="section-heading"><div><span className="kicker">Catalogue réel</span><h2>Livres publiés</h2></div><span className="result-count">{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span></div>
+      {loading ? <div className="empty-state"><Loader2 size={30}/><h3>Chargement des livres...</h3><p>Connexion au catalogue MIMOUVERSE.</p></div> : error ? <div className="empty-state"><BookOpen size={30}/><h3>Catalogue temporairement indisponible</h3><p>{error}</p></div> : filtered.length === 0 ? <div className="empty-state"><BookOpen size={30}/><h3>Aucun livre publié</h3><p>Les nouveaux livres apparaîtront ici dès leur publication.</p></div> : <div className="book-grid">{filtered.map((book) => <article className="book-card" key={book.id}><div className="book-cover" style={{background:'linear-gradient(145deg,#312e81,#0f172a)'}}><img src={book.cover} alt={`Couverture de ${book.title}`} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:12}} onError={(e) => { e.currentTarget.src = FALLBACK_COVER }}/><button aria-label="Ajouter aux favoris" className={favorites.includes(book.id) ? 'favorite selected' : 'favorite'} onClick={() => toggleFavorite(book.id)}><Heart size={18} fill={favorites.includes(book.id) ? 'currentColor' : 'none'}/></button></div><div className="book-info"><span className="book-category">{book.category}</span><h3>{book.title}</h3><p>{book.author}</p>{book.description && <p>{book.description}</p>}<div className="book-actions"><button className="read-button" disabled={!book.file} onClick={() => book.file && setReader(book)}>{book.file ? <>Lire sur MIMOUVERSE <ArrowRight size={16}/></> : 'Fichier indisponible'}</button>{book.file && <a className="download-button" href={book.file} download aria-label={`Télécharger le PDF de ${book.title}`}><Download size={16}/> Télécharger PDF</a>}</div></div></article>)}</div>}
+    </section>
 
-    return books.filter((book) => {
-      const title = (book.title || '').toLowerCase()
-      const author = (book.author || '').toLowerCase()
-      const description = (book.description || '').toLowerCase()
+    <Feedback type="book" items={books} />
 
-      const matchesSearch =
-        !query ||
-        title.includes(query) ||
-        author.includes(query) ||
-        description.includes(query)
-
-      const matchesCategory =
-        category === 'Tous' || book.category === category
-
-      return matchesSearch && matchesCategory
-    })
-  }, [books, search, category])
-
-  return (
-    <main className="simple-page books-page">
-      <span className="page-badge">📚 BIBLIOTHÈQUE</span>
-
-      <h1>Les livres</h1>
-
-      <p className="page-intro">
-        Découvre les œuvres disponibles sur MIMOUVERSE.
-      </p>
-
-      <section className="books-toolbar">
-        <div className="books-search">
-          <Search size={20} />
-
-          <input
-            type="search"
-            placeholder="Rechercher un livre, un auteur..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </div>
-
-        <div className="books-categories">
-          {categories.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={category === item ? 'active' : ''}
-              onClick={() => setCategory(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {loading && (
-        <section className="empty-section">
-          <RefreshCw className="spin" size={30} />
-          <h2>Chargement de la bibliothèque...</h2>
-          <p>MIMOUVERSE récupère les livres depuis Supabase.</p>
-        </section>
-      )}
-
-      {!loading && error && (
-        <section className="empty-section error-section">
-          <div>⚠️</div>
-          <h2>Impossible de charger les livres</h2>
-          <p>{error}</p>
-
-          <button type="button" onClick={loadBooks}>
-            Réessayer
-          </button>
-        </section>
-      )}
-
-      {!loading && !error && filteredBooks.length === 0 && (
-        <section className="empty-section">
-          <div>📚</div>
-
-          <h2>
-            {books.length === 0
-              ? 'Aucun livre publié pour le moment'
-              : 'Aucun résultat'}
-          </h2>
-
-          <p>
-            {books.length === 0
-              ? 'Les livres publiés par l’administrateur apparaîtront ici.'
-              : 'Essaie une autre recherche ou une autre catégorie.'}
-          </p>
-        </section>
-      )}
-
-      {!loading && !error && filteredBooks.length > 0 && (
-        <section className="books-grid">
-          {filteredBooks.map((book) => (
-            <article className="book-card" key={book.id}>
-              <div className="book-cover">
-                {book.cover_url ? (
-                  <img
-                    src={book.cover_url}
-                    alt={'Couverture de ' + book.title}
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="book-cover-placeholder">
-                    <BookOpen size={46} />
-                  </div>
-                )}
-              </div>
-
-              <div className="book-card-content">
-                <span className="book-category">
-                  {book.category || 'Livre'}
-                </span>
-
-                <h2>{book.title}</h2>
-
-                <p className="book-author">
-                  {book.author || 'Auteur inconnu'}
-                </p>
-
-                {book.description && (
-                  <p className="book-description">
-                    {book.description}
-                  </p>
-                )}
-
-                <div className="book-stats">
-                  <span>
-                    <Star size={16} />
-                    {Number(book.rating || 0).toFixed(1)}
-                  </span>
-
-                  <span>
-                    <Users size={16} />
-                    {book.readers_count || 0}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  className="book-read-button"
-                  disabled={!book.pdf_url}
-                >
-                  <BookOpen size={18} />
-
-                  {book.pdf_url
-                    ? 'Lire le livre'
-                    : 'Bientôt disponible'}
-                </button>
-              </div>
-            </article>
-          ))}
-        </section>
-      )}
-    </main>
-  )
+    {reader && <div className="book-reader-overlay" role="dialog" aria-modal="true" aria-label={`Lecture de ${reader.title}`}>
+      <div className="book-reader-shell">
+        <header className="book-reader-header">
+          <div className="book-reader-title"><button className="reader-back" onClick={() => setReader(null)}><ArrowLeft size={17}/> Retour aux livres</button><strong>{reader.title}</strong><span>{reader.author}</span></div>
+          <div className="book-reader-actions"><a href={reader.file} download aria-label={`Télécharger le PDF de ${reader.title}`}><Download size={18}/></a><a href={reader.file} target="_blank" rel="noopener noreferrer" aria-label="Ouvrir le lecteur PDF en plein écran"><Maximize2 size={18}/></a><button onClick={() => setReader(null)} aria-label="Fermer la lecture"><X size={20}/></button></div>
+        </header>
+        <iframe className="book-reader-frame" src={reader.file} title={`Lecture de ${reader.title}`} />
+      </div>
+    </div>}
+  </main>
 }
